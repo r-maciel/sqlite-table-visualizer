@@ -18,14 +18,19 @@ def connect_db(connection):
 
 @cli.command('tables')
 def show_tables():
-	""" Printing all DB table names """
+	""" Print all DB table names """
 	cursor = connect_to_db()
-	# data = cursor.execute("SELECT name AS 'tables' FROM sqlite_master WHERE type='table';").fetchall()
-	data = cursor.execute("SELECT * FROM stocks").fetchall()
-	# Getting a tuple with column names
-	columns_name = [name[0] for name in cursor.description]	
+	data = cursor.execute("SELECT name AS 'tables' FROM sqlite_master WHERE type='table';").fetchall()
 
-	data_dict = organize_data(data, columns_name)
+	columns_name = [name[0] for name in cursor.description]	
+	print_table(columns_name, data)
+
+
+
+	
+
+
+
 
 def connect_to_db():
 	config = configparser.ConfigParser()
@@ -36,25 +41,39 @@ def connect_to_db():
 	
 	return conn.cursor()
 
-def organize_data(data, columns_name):
-	# Converting the tuples to lists and the integers to strings
+def print_table(columns_name, data):
+	# Converting the tuples to lists and the integers to strings, and adding spaces
 	rows = [[str(value) for value in list(values)] for values in data]
 
-	# zip() returns an iterator of tuples, taking elements from each iterable recieved as parameter,with * we 
-	# break apart the list as parameters
+	# zip() returns an iterator of tuples, taking elements in order from each iterable recieved as parameter
+	# With * we break apart the list as parameters
 	columns = list(zip(*rows))
 
-	data_dict = {}
+	# creating tuples as [(first_el_l1, fisrt_el_l2), (second_el_l1, second)]
+	sizes = [
+		(len(max(max(data, key=len), column_name, key=len)) + 2)
+		for (column_name, data) in zip(columns_name, columns)
+	]
 
-	for key, column_name in enumerate(columns_name):
-		data = columns[key]
-		# max return the largest item in an iterable or the largest of two or more arguments.
-		# then we get the len of the word and we increment it in 2 for spaces
-		longest_size = len(max(max(data, key=len), column_name, key=len)) + 2
+	# Creating the table
+	line = ''
+	columns_name_string = ''
+	for size, name in zip(sizes, columns_name):
+		line += ('+' + '-' * size )
+		columns_name_string += ('| ' + name.ljust(size - 1, ' '))
 
-		data_dict[column_name] = {
-			'data': data,
-			'size': longest_size
-		}
+	line += '+'
+	columns_name_string += '|'
 
-	return data_dict
+	click.echo(line)
+	click.echo(columns_name_string)
+	for row in rows:
+		click.echo(line)
+		row_string = ''
+		for (size, value) in zip(sizes, row):
+			row_string += '| ' + value.ljust(size - 1, ' ') 
+
+		row_string += '|'
+		click.echo(row_string)
+
+	click.echo(line)
