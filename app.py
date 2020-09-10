@@ -13,14 +13,14 @@ def connect_db(path):
 	""" Add the SQLite PATH """
 	DBConnection.write_config_file(path)
 
-@cli.command('tables')
-def show_tables():
-	""" Print all DB table names """
-	query = Querys()
-	query.show_tables()
-
 @cli.command('show')
-@click.argument('table_name')
-def show(table_name):
+@click.option('-t', '--table', help="Table's name")
+@click.option('-f', '--format', 
+	default='default',
+	type=click.Choice(['default', 'hline', 'columns', 'cells', 'rows'], 
+	case_sensitive=False)
+)
+def show(table, format):
 	""" Add the SQLite path """
-	pass
+	query = Querys()
+	query.show_table_names(format) if not table else query.show_table(table, format)

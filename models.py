@@ -35,22 +35,33 @@ class Querys:
 	def __get_columns_name(self):
 		return [name[0] for name in self.new_connection.cursor.description]
 
-	def show_tables(self):
+	def show_table_names(self, style):
 		data = self.new_connection.cursor.execute(
 			"SELECT name AS 'tables' FROM sqlite_master WHERE type='table';"
 		).fetchall()
 
 		columns_name = self.__get_columns_name()
 
-		printable = PrintTable(columns_name, data)
+		printable = PrintTable(columns_name, data, style)
+		printable.print()
+
+	def show_table(self, table, style):
+		data = self.new_connection.cursor.execute(
+			f"SELECT * FROM {table};"
+		).fetchall()
+
+		columns_name = self.__get_columns_name()
+
+		printable = PrintTable(columns_name, data, style)
 		printable.print()
 
 
 class PrintTable:
 	""" Printing style methods """
-	def __init__(self, columns_name, data):
+	def __init__(self, columns_name, data, style):
 		self.columns_name = columns_name
 		self.data = data
+		self.style = style
 		self.__organize_data()
 
 	def __organize_data(self):
@@ -68,6 +79,18 @@ class PrintTable:
 		]
 
 	def print(self):
+		if self.style == 'default':
+			self.default()
+		elif self.style == 'hline':
+			self.hline()
+		elif self.style == 'cells':
+			self.cells()
+		elif self.style == 'columns':
+			self.columns()
+		elif self.style == 'rows':
+			self.rows_style()
+
+	def default(self):
 		# Creating the table
 		line = ''
 		columns_name_string = ''
@@ -90,3 +113,99 @@ class PrintTable:
 			click.echo(row_string)
 
 		click.echo(line)
+
+	def cells(self):
+		# Creating the table
+		line = ''
+		columns_name_string = ''
+		for size, name in zip(self.sizes, self.columns_name):
+			line += ('+' + '-' * size )
+			columns_name_string += ('| ' + name.ljust(size - 1, ' '))
+
+		line += '+'
+		columns_name_string += '|'
+
+		click.echo(line)
+		click.echo(columns_name_string)
+		click.echo(line)
+		for row in self.rows:
+			row_string = ''
+			for (size, value) in zip(self.sizes, row):
+				row_string += '| ' + value.ljust(size - 1, ' ') 
+
+			row_string += '|'
+			click.echo(row_string)
+
+			click.echo(line)
+
+	def hline(self):
+		# Creating the table
+		line = ''
+		columns_name_string = ''
+		for size, name in zip(self.sizes, self.columns_name):
+			line += ('-' + '-' * size )
+			columns_name_string += ('  ' + name.ljust(size - 1, ' '))
+
+		line += '-'
+		columns_name_string += ' '
+
+		click.echo(line)
+		click.echo(columns_name_string)
+		click.echo(line)
+		for row in self.rows:
+			row_string = ''
+			for (size, value) in zip(self.sizes, row):
+				row_string += '  ' + value.ljust(size - 1, ' ') 
+
+			row_string += ' '
+			click.echo(row_string)
+
+	def rows_style(self):
+		# Creating the table
+		line = ''
+		columns_name_string = ''
+		for size, name in zip(self.sizes, self.columns_name):
+			line += ('-' + '-' * size )
+			columns_name_string += ('  ' + name.ljust(size - 1, ' '))
+
+		line += '-'
+		columns_name_string += ' '
+
+		click.echo(line)
+		click.echo(columns_name_string)
+		click.echo(line)
+		for row in self.rows:
+			row_string = ''
+			for (size, value) in zip(self.sizes, row):
+				row_string += '  ' + value.ljust(size - 1, ' ') 
+
+			row_string += ' '
+			click.echo(row_string)
+			click.echo(line)
+
+	def columns(self):
+		# Creating the table
+		line = ''
+		columns_name_string = ''
+		for size, name in zip(self.sizes, self.columns_name):
+			# if self.columns_name[-1] == name:
+			# 	columns_name_string += ('  ' + name.ljust(size - 1, ' '))
+			# else:
+			columns_name_string += ('| ' + name.ljust(size - 1, ' ') + ' ')
+			line += ('|' + ' ' * (size+1))
+
+		columns_name_string += '|'
+		line += '|'
+
+		click.echo(columns_name_string)
+		click.echo(line)
+		for row in self.rows:
+			row_string = ''
+			for (size, value) in zip(self.sizes, row):
+				# if row[-1] == value:
+				# 	row_string += ('  ' + value.ljust(size - 1, ' '))
+				# else:
+				row_string += ('| ' + value.ljust(size - 1, ' ') + ' ')
+
+			row_string += '|'
+			click.echo(row_string)
