@@ -1,5 +1,4 @@
 venv/
 SQLite_Table_Visalizer.egg-info/
 __pycache__/
-example.db
 .connection.conf
